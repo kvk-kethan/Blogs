@@ -1,4 +1,6 @@
 const router = require("express").Router();
+const multer=require("multer")
+const storage=require("../middlewares/multer")
 const {
   postBlog,
   getBlogs,
@@ -10,6 +12,7 @@ const {
   dashboard,
 } = require("../controllers/blogControllers");
 const { auth, verifyRole } = require("../middlewares/authMiddleware");
+const upload=multer({storage:storage})
 
 router.get(
   "/dashboard",
@@ -17,7 +20,7 @@ router.get(
   verifyRole(["user", "admin", "author"]),
   dashboard
 );
-router.post("/", auth, verifyRole(["author"]), postBlog);
+router.post("/", auth, verifyRole(["author"]),upload.single("image"), postBlog);
 router.get("/", auth, getBlogs);
 router.get("/:id", auth, getBlog);
 router.patch("/:id", auth, verifyRole(["author"]), updateBlog);

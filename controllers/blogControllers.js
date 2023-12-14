@@ -8,7 +8,7 @@ const postBlog = asyncErrorHandler(async (req, res) => {
     title: req.body.title,
     snippet: req.body.snippet,
     description: req.body.description,
-    image: req.body.image,
+    image: req.file,
     author: user._id,
   });
   res.status(201).json({

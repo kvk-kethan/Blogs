@@ -21,7 +21,7 @@ const blogSchema=new Schema({
         required:[true,"author is required"]
     },
     image:{
-        type:[String],
+        type:[""],
         default:""
     }
 })
