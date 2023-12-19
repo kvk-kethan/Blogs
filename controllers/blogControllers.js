@@ -3,6 +3,13 @@ const Rating = require("../models/Rating");
 const User = require("../models/User");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 
+
+const getBlogsByAuthor = asyncErrorHandler(async (req, res) => {
+  let author = req.user._id;
+  let blogs = await Blog.find({ author: author }).populate("author");
+  return res.render("blogs", { blogs });
+});
+
 const postBlog = asyncErrorHandler(async (req, res) => {
   let user = req.user;
   const newBlog = await Blog.create({
@@ -143,4 +150,5 @@ module.exports = {
   deleteBlog,
   postRating,
   dashboard,
+  getBlogsByAuthor
 };
