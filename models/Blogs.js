@@ -17,7 +17,7 @@ const blogSchema=new Schema({
     },
     author:{
         type:Schema.Types.ObjectId,
-        ref:'user',
+        ref:'author',
         required:[true,"author is required"]
     },
     image:{

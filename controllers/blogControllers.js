@@ -1,5 +1,6 @@
 const Blog = require("../models/Blogs");
 const Rating = require("../models/Rating");
+const User = require("../models/User");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 
 const postBlog = asyncErrorHandler(async (req, res) => {
@@ -21,38 +22,41 @@ const postBlog = asyncErrorHandler(async (req, res) => {
 
 const getBlog = asyncErrorHandler(async (req, res) => {
   const { id } = req.params;
-  const blog = await Blog.findById(id);
-  res.status(200).json({
-    status: "success",
-    data: {
-      blog,
-    },
-  });
+  const blog = await Blog.findById(id).populate("author");
+  const ratings = await Rating.find({ blog: blog._id }).populate("user");
+  res.render("blog", { blog, ratings });
 });
 
 const getBlogs = asyncErrorHandler(async (req, res) => {
   let search = req.query.search || "";
   let page = req.query.page * 1 || 1;
-  let limit = req.query.limit * 1 || 2;
+  let limit = req.query.limit * 1 || 10;
   let sort = req.query.sort || "rating";
   let skip = (page - 1) * limit;
   //ratings,year  //ratings year
   sort && sort.split(",").join(" ");
 
   const blogs = await Blog.find({ title: { $regex: search, $options: "i" } })
+    .populate("author")
     .skip(skip)
     .limit(limit)
     .sort(sort);
-
+  // console.log(blogs);
   let totalBlogs = await Blog.countDocuments();
-  res.status(200).json({
-    status: "success",
+  // res.status(200).json({
+  //   status: "success",
+  //   page,
+  //   limit,
+  //   totalBlogs,
+  //   data: {
+  //     blogs,
+  //   },
+  // });
+  res.render("blogs", {
     page,
     limit,
     totalBlogs,
-    data: {
-      blogs,
-    },
+    blogs,
   });
 });
 
@@ -91,33 +95,33 @@ const deleteBlog = asyncErrorHandler(async (req, res) => {
 });
 
 let postRating = asyncErrorHandler(async (req, res) => {
-  let userId = req.user._id;
-  let blogId = req.params.id;
-  let rating = await Rating.create({
-    ratings: req.body.ratings,
-    userId: userId,
-    blogId: blogId,
+  let user = req.user._id;
+  let blog = req.params.id;
+  let duplicateRating=await Rating.findOne({user:user,blog:blog});
+  if(duplicateRating){
+    duplicateRating.ratings=req.body.ratings;
+    await duplicateRating.save();
+    return res.redirect("/app/v1/blogs/ratings/:id");
+  }
+  await Rating.create({
+    ratings: +req.body.ratings,
+    user: user,
+    blog: blog,
   });
-  res.status(201).json({
-    status: "success",
-    blogId,
-    data: {
-      rating,
-    },
-  });
+  res.redirect("/app/v1/blogs/ratings/:id");
 });
 
-let getRatings = asyncErrorHandler(async (req, res) => {
-  let blogId = req.params.id;
-  let ratings = await Rating.find({ blogId: blogId });
-  res.status(200).json({
-    status: "success",
-    blogId,
-    data: {
-      ratings,
-    },
-  });
-});
+// let getRatings = asyncErrorHandler(async (req, res) => {
+//   let blogId = req.params.id;
+//   let ratings = await Rating.find({ blogId: blogId });
+//   res.status(200).json({
+//     status: "success",
+//     blogId,
+//     data: {
+//       ratings,
+//     },
+//   });
+// });
 
 const dashboard = (req, res) => {
   if (req.user.role === "admin") {
@@ -138,6 +142,5 @@ module.exports = {
   updateBlog,
   deleteBlog,
   postRating,
-  getRatings,
-  dashboard
+  dashboard,
 };

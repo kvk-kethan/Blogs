@@ -9,7 +9,6 @@ const genToken = async (id) => {
 };
 const signupWrapper = (Model) => {
   return asyncErrorHandler(async (req, res, next) => {
-    // console.log(req.body);
     const newUser = await Model.create(req.body);
     const token = await genToken(newUser._id);
     res.cookie("jwt", token, {
@@ -45,10 +44,8 @@ const loginWrapper = (Model) => {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
     });
-    
     // console.log(existingUser.role);
     res.status(303).redirect("/app/v1/blogs/dashboard");
-    
   });
 };
 
